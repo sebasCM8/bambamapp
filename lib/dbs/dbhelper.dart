@@ -17,6 +17,7 @@ class DBHelper{
     await db.execute("""
       CREATE TABLE Carrito(
         carPro INTEGER,
+        carNombre TEXT,
         carCant REAL
       )
     """);

@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:bambam_app/Controllers/carrito_ctrl.dart';
 import 'package:bambam_app/Controllers/producto_ctrl.dart';
 import 'package:bambam_app/Models/categoria_class.dart';
 import 'package:bambam_app/Models/producto_class.dart';
@@ -28,6 +30,8 @@ class _ProductosPageState extends State<ProductosPage> {
 
   int _catSlct = 0;
   int _uniSlct = 0;
+
+  bool _carrito = false;
 
   @override
   void initState() {
@@ -74,6 +78,8 @@ class _ProductosPageState extends State<ProductosPage> {
       _loading = true;
     });
 
+    _carrito = await checkCarrito();
+
     RRObtProductos procResp = await getprodProc();
     if (procResp.resp.ok) {
       _fullProds = List.from(procResp.productos);
@@ -103,6 +109,16 @@ class _ProductosPageState extends State<ProductosPage> {
     setState(() {
       _loading = false;
     });
+  }
+
+  Future<bool> checkCarrito() async {
+    bool result;
+    try {
+      result = await CarritoController.hayItems();
+    } catch (e) {
+      result = false;
+    }
+    return result;
   }
 
   Widget unidadesSlct() {
@@ -182,6 +198,11 @@ class _ProductosPageState extends State<ProductosPage> {
     }
   }
 
+  Future<void> updtCarrito() async {
+    _carrito = await checkCarrito();
+    setState(() {});
+  }
+
   Widget productosList() {
     List<Widget> prdList = [];
     for (Producto prd in _productos) {
@@ -189,7 +210,8 @@ class _ProductosPageState extends State<ProductosPage> {
           .withOpacity(1.0);
       Widget prdCard = InkWell(
         onTap: () {
-          Navigator.pushNamed(context, "/productoDetallePage", arguments: prd);
+          Navigator.pushNamed(context, "/productoDetallePage", arguments: prd)
+              .then((value) => updtCarrito());
         },
         child: Container(
             margin: const EdgeInsets.all(8),
@@ -215,7 +237,9 @@ class _ProductosPageState extends State<ProductosPage> {
             child: Text(
               prd.proNombre,
               style: const TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white),
             )),
       );
       prdList.add(prdCard);
@@ -226,6 +250,10 @@ class _ProductosPageState extends State<ProductosPage> {
         children: prdList,
       ),
     );
+  }
+
+  void gocarrito() {
+    Navigator.pushNamed(context, "/carritoPage").then((value) => updtCarrito());
   }
 
   @override
@@ -249,6 +277,10 @@ class _ProductosPageState extends State<ProductosPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text("Productos")),
+      floatingActionButton: FloatingActionButton(
+          onPressed: _carrito ? gocarrito : null,
+          backgroundColor: _carrito ? Colors.purple : Colors.grey,
+          child: const Icon(Icons.shopping_cart)),
       body: Column(children: [
         filtro,
         if (_productos.isNotEmpty) productosList(),

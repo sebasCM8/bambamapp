@@ -1,4 +1,8 @@
+import 'package:bambam_app/Controllers/carrito_ctrl.dart';
+import 'package:bambam_app/Models/carrito_class.dart';
+import 'package:bambam_app/Models/generic_class.dart';
 import 'package:bambam_app/Models/producto_class.dart';
+import 'package:bambam_app/Models/resp_class.dart';
 import 'package:bambam_app/Pages/mywidgets.dart';
 import 'package:flutter/material.dart';
 
@@ -18,6 +22,68 @@ class _ProductoDetPageState extends State<ProductoDetPage> {
   void dispose() {
     _cantCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> msgErrDialog(BuildContext context, String msg) async {
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(
+              msg,
+              style: const TextStyle(color: Colors.red),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text(
+                    "OK",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  ))
+            ],
+          );
+        });
+  }
+
+  Future<ResponseResult> guardaritemproc() async {
+    ResponseResult result = ResponseResult();
+    try {
+      Carrito item = Carrito();
+      item.carPro = widget.prd.proId;
+      item.carNombre = widget.prd.proNombre;
+
+      if (!GeneriOps.checValidFloat(_cantCtrl.text)) {
+        result.ok = false;
+        result.msg = "Cantidad invalida";
+        return result;
+      }
+      item.carCant = double.parse(_cantCtrl.text);
+      result = await CarritoController.guardarItem(item);
+    } catch (e) {
+      result.ok = false;
+      result.msg = "Excepcion al guardar item: $e";
+    }
+
+    return result;
+  }
+
+  Future<void> guardarItemBtn() async {
+    setState(() {
+      _loading = true;
+    });
+
+    ResponseResult procresp = await guardaritemproc();
+    if (procresp.ok) {
+      Navigator.pop(context);
+    } else {
+      msgErrDialog(context, procresp.msg);
+    }
+
+    setState(() {
+      _loading = false;
+    });
   }
 
   @override
@@ -105,15 +171,20 @@ class _ProductoDetPageState extends State<ProductoDetPage> {
           ),
         ),
         inputOne(_cantCtrl, "Cantidad...", 5),
+        if (_loading)
+          Container(
+            alignment: Alignment.center,
+            child: const CircularProgressIndicator(
+              strokeWidth: 6,
+            ),
+          ),
         if (!_loading)
           Align(
               alignment: Alignment.center,
               child: Container(
                   width: devSize.width * 0.75,
                   child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, "/registroPage");
-                      },
+                      onPressed: guardarItemBtn,
                       child: const Text("AÑADIR AL CARRO"))))
       ]),
     );

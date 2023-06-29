@@ -1,5 +1,6 @@
 
 import 'package:bambam_app/Models/producto_class.dart';
+import 'package:bambam_app/Pages/carrito_page.dart';
 import 'package:bambam_app/Pages/home_page.dart';
 import 'package:bambam_app/Pages/initial_page.dart';
 import 'package:bambam_app/Pages/login_page.dart';
@@ -34,7 +35,8 @@ class MyApp extends StatelessWidget {
         '/registroPage': (context) => const RegistroPage(),
         '/homePage':(context) => const HomePage(),
         '/productosPage':(context) => const ProductosPage(),
-        '/productoDetallePage':(context) => ProductoDetPage(prd: ModalRoute.of(context)!.settings.arguments as Producto)
+        '/productoDetallePage':(context) => ProductoDetPage(prd: ModalRoute.of(context)!.settings.arguments as Producto),
+        '/carritoPage':(context) => const CarritoPage(),
       },
     );
   }
